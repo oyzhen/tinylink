@@ -1,16 +1,16 @@
-# tinylink
+# justlink
 
 [中文文档](./README.zh-CN.md)
 
-> Zero-dependency, type-safe RPC for Web Workers and Node.js worker_threads.
+> Type-safe RPC for Workers, threads, and beyond — zero deps, local-feel calls.
 
 Inspired by [`comlink`](https://github.com/GoogleChromeLabs/comlink) and [`minlink`](https://github.com/mizchi/minlink).
 
-## What is tinylink?
+## What is justlink?
 
 Workers let you move heavy computation off the main thread, but talking to them is painful — you have to juggle `postMessage`, `onmessage`, manual serialization, and state tracking. Your code quickly turns into spaghetti.
 
-**tinylink lets you call Worker methods like regular function calls.** You define an object, and tinylink handles all the communication for you.
+**justlink lets you call Worker methods like regular function calls.** You define an object, and justlink handles all the communication for you.
 
 ```ts
 // Define (inside the Worker)
@@ -27,9 +27,9 @@ const result = await api.fibonacci(40); // That's it!
 
 No `postMessage`. No `onmessage`. No manual serialization. Just `expose` and `wrap`.
 
-## Why tinylink?
+## Why justlink?
 
-|                    | tinylink                             | Raw postMessage     | Comlink |
+|                    | justlink                             | Raw postMessage     | Comlink |
 | ------------------ | ------------------------------------ | ------------------- | ------- |
 | **Boilerplate**    | Minimal (2 functions)                | Lots of glue code   | Low     |
 | **TypeScript**     | ✅ Full inference + autocomplete     | ❌ Manual type defs | ✅      |
@@ -43,30 +43,30 @@ No `postMessage`. No `onmessage`. No manual serialization. Just `expose` and `wr
 ## Install
 
 ```bash
-npm install tinylink
+npm install justlink
 ```
 
 ### Imports
 
-tinylink ships three entry points — pick the one matching your environment:
+justlink ships three entry points — pick the one matching your environment:
 
 | Import path        | Use case                        |
 | ------------------ | ------------------------------- |
-| `tinylink/browser` | Web Workers (`self` / `Worker`) |
-| `tinylink/node`    | `worker_threads` (`parentPort`) |
-| `tinylink/memory`  | In-process (no real Worker)     |
+| `justlink/browser` | Web Workers (`self` / `Worker`) |
+| `justlink/node`    | `worker_threads` (`parentPort`) |
+| `justlink/memory`  | In-process (no real Worker)     |
 
 ```ts
-import { expose, wrap } from 'tinylink/browser';
-import { expose, wrap } from 'tinylink/node';
-import { expose, wrap, createMemoryPair } from 'tinylink/memory';
-import type { RemoteApi } from 'tinylink/browser';
+import { expose, wrap } from 'justlink/browser';
+import { expose, wrap } from 'justlink/node';
+import { expose, wrap, createMemoryPair } from 'justlink/memory';
+import type { RemoteApi } from 'justlink/browser';
 ```
 
-The core module (`tinylink/core`) exposes low-level APIs for building custom adapters:
+The core module (`justlink/core`) exposes low-level APIs for building custom adapters:
 
 ```ts
-import { createExpose, createWrap, type Adapter, type RemoteApi } from 'tinylink/core';
+import { createExpose, createWrap, type Adapter, type RemoteApi } from 'justlink/core';
 ```
 
 ## Quick Start (5 minutes)
@@ -115,7 +115,7 @@ export type Impl = typeof impl;
 
 ```ts
 // worker.ts
-import { expose } from 'tinylink/browser';
+import { expose } from 'justlink/browser';
 import { impl } from './worker-impl';
 
 expose(self, impl); // One line!
@@ -126,7 +126,7 @@ expose(self, impl); // One line!
 ```ts
 // worker.ts
 import { parentPort } from 'node:worker_threads';
-import { expose } from 'tinylink/node';
+import { expose } from 'justlink/node';
 import { impl } from './worker-impl';
 
 expose(parentPort!, impl); // One line!
@@ -138,7 +138,7 @@ expose(parentPort!, impl); // One line!
 
 ```ts
 // main.ts
-import { wrap } from 'tinylink/browser';
+import { wrap } from 'justlink/browser';
 import type { Impl } from './worker-impl';
 import MyWorker from './worker?worker'; // Vite worker import
 
@@ -156,7 +156,7 @@ console.log(await api.nested.add(1, 2)); // 3
 ```ts
 // main.ts
 import { Worker } from 'node:worker_threads';
-import { wrap } from 'tinylink/node';
+import { wrap } from 'justlink/node';
 import type { Impl } from './worker-impl';
 
 const worker = new Worker('./worker.js');
@@ -264,15 +264,15 @@ await api.$eval(...);   // → rejects
 
 ### `createMemoryPair()`
 
-> `import { createMemoryPair } from 'tinylink/memory'`
+> `import { createMemoryPair } from 'justlink/memory'`
 
 Creates a paired `host` / `worker` context that communicates via direct in-process calls — no real Worker needed.
 
-Typical use case: you build an API on top of tinylink and want it to work identically whether it's running inside a Worker or not:
+Typical use case: you build an API on top of justlink and want it to work identically whether it's running inside a Worker or not:
 
 ```ts
-import { createMemoryPair, expose, wrap } from 'tinylink/memory';
-import { expose as browserExpose, wrap as browserWrap } from 'tinylink/browser';
+import { createMemoryPair, expose, wrap } from 'justlink/memory';
+import { expose as browserExpose, wrap as browserWrap } from 'justlink/browser';
 
 let api: ImplApi;
 
@@ -326,7 +326,7 @@ const sum = await api.$eval(
 
 ### Transferable Objects
 
-tinylink automatically detects and transfers these types — no manual `transferList` needed:
+justlink automatically detects and transfers these types — no manual `transferList` needed:
 
 - `ArrayBuffer`
 - Typed arrays (`Uint8Array`, `Float32Array`, etc.)
@@ -352,7 +352,7 @@ try {
 
 ### Nested Objects & Return Values
 
-When a Worker method returns an object, tinylink auto-proxies it so you can keep calling methods:
+When a Worker method returns an object, justlink auto-proxies it so you can keep calling methods:
 
 ```ts
 const counter = await api.createCounter(0);
@@ -367,7 +367,7 @@ await obj.child.deepMethod();
 
 ### Plain Objects vs Proxies
 
-tinylink decides how to transport a return value based on **whether it contains functions**:
+justlink decides how to transport a return value based on **whether it contains functions**:
 
 **Objects with functions** → return a **remote proxy** — each access triggers a `postMessage`:
 
@@ -415,10 +415,10 @@ await counter.inc(); // postMessage round-trip
 
 ## Custom Transport Layer
 
-The core `createExpose` / `createWrap` functions accept a generic `Adapter` tuple, so you can wire tinylink to any transport:
+The core `createExpose` / `createWrap` functions accept a generic `Adapter` tuple, so you can wire justlink to any transport:
 
 ```ts
-import { createExpose, createWrap, type Adapter } from 'tinylink/core';
+import { createExpose, createWrap, type Adapter } from 'justlink/core';
 
 const myAdapter: Adapter<MyContext> = [
     // emit(ctx, data, transferList?) — send data to the other side
@@ -440,11 +440,34 @@ export const wrap = createWrap(myAdapter);
 ## Import Paths
 
 ```ts
-import { expose, wrap } from 'tinylink/browser'; // Browser Web Worker
-import { expose, wrap } from 'tinylink/node'; // Node.js worker_threads
-import { createMemoryPair, expose, wrap } from 'tinylink/memory'; // In-process communication
-import { createExpose, createWrap } from 'tinylink/core'; // Custom transport
+import { expose, wrap } from 'justlink/browser'; // Browser Web Worker
+import { expose, wrap } from 'justlink/node'; // Node.js worker_threads
+import { createMemoryPair, expose, wrap } from 'justlink/memory'; // In-process communication
+import { createExpose, createWrap } from 'justlink/core'; // Custom transport
 ```
+
+## Agent Skills
+
+justlink ships with [skills](https://skills.sh) for AI coding agents — reusable knowledge that helps agents generate correct justlink code.
+
+```bash
+npx skills add oyzhen/justlink
+```
+
+| Skill                | Description                                                                      |
+| -------------------- | -------------------------------------------------------------------------------- |
+| `wrap-to-remote-api` | Expose a plain object in a Worker and wrap it as `RemoteApi`                     |
+| `universal-worker`   | Run a Worker with auto-detection; falls back to in-process via `justlink/memory` |
+
+## Limitations & Gotchas
+
+### `$eval` closures don't work
+
+`$eval` callbacks are `.toString()` serialized and executed in the Worker — closures over external variables don't survive the trip. Use the `deps` array to pass data in.
+
+### `__ref` objects
+
+Objects that contain functions are NOT structure-cloneable and are stored as remote refs. If your plain data happens to have a `__ref` property, justlink will incorrectly treat it as a remote ref descriptor. Prefix your data keys with something else if this conflicts.
 
 ## Requirements
 

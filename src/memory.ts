@@ -32,11 +32,12 @@ const adapter: Adapter<object> = [
     ctx => {
         const entry = peers.get(ctx);
         if (entry?.peer) {
-            const peer = peers.get(entry.peer);
-            if (peer) {
-                peer.handler = undefined;
-                peer.peer = undefined;
+            const peerEntry = peers.get(entry.peer);
+            if (peerEntry) {
+                peerEntry.handler = undefined;
+                peerEntry.peer = undefined;
             }
+            peers.delete(entry.peer);
         }
         peers.delete(ctx);
         return Promise.resolve();

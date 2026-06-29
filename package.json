@@ -1,10 +1,34 @@
 {
-    "name": "tinylink",
-    "version": "0.1.0",
+    "name": "justlink",
+    "version": "1.0.0",
+    "description": "Type-safe RPC for Workers, threads, and beyond — zero deps, local-feel calls.",
     "license": "MIT",
+    "author": "oyzhen",
     "type": "module",
     "packageManager": "yarn@4.16.0",
     "sideEffects": false,
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/oyzhen/justlink.git"
+    },
+    "homepage": "https://github.com/oyzhen/justlink#readme",
+    "bugs": {
+        "url": "https://github.com/oyzhen/justlink/issues"
+    },
+    "keywords": [
+        "worker",
+        "web-worker",
+        "worker-threads",
+        "rpc",
+        "remote",
+        "postMessage",
+        "type-safe",
+        "typescript",
+        "comlink"
+    ],
+    "engines": {
+        "node": ">=18"
+    },
     "exports": {
         "./core": {
             "types": "./dist/core.d.ts",
@@ -23,6 +47,22 @@
             "import": "./dist/memory.js"
         }
     },
+    "typesVersions": {
+        "*": {
+            "core": [
+                "./dist/core.d.ts"
+            ],
+            "browser": [
+                "./dist/browser.d.ts"
+            ],
+            "node": [
+                "./dist/node.d.ts"
+            ],
+            "memory": [
+                "./dist/memory.d.ts"
+            ]
+        }
+    },
     "files": [
         "dist",
         "LICENSE",
@@ -38,9 +78,21 @@
         "lint": "eslint . --fix",
         "test": "vitest run --config=vitest.config.ts --coverage && vitest run --config=vitest.browser.config.ts --coverage",
         "test:browser": "vitest run --config=vitest.browser.config.ts --coverage",
-        "prepublishOnly": "npm run lint && npm run build && npm test"
+        "prepublishOnly": "npm run lint && npm run build && npm test",
+        "prepare": "husky"
+    },
+    "lint-staged": {
+        "*.{ts,tsx,js,jsx}": [
+            "eslint . --fix",
+            "prettier --write"
+        ],
+        "*.{json,md}": [
+            "prettier --write"
+        ]
     },
     "devDependencies": {
+        "@commitlint/cli": "^21.1.0",
+        "@commitlint/config-conventional": "^21.1.0",
         "@eslint/js": "^10.0.1",
         "@types/node": "^24.13.2",
         "@vitest/browser": "^4.1.9",
@@ -48,7 +100,9 @@
         "@vitest/coverage-v8": "4.1.9",
         "eslint": "^10.5.0",
         "happy-dom": "^20.10.5",
+        "husky": "^9.1.7",
         "jsdom": "^29.1.1",
+        "lint-staged": "^17.0.8",
         "playwright": "^1.61.0",
         "prettier": "^3.8.4",
         "typescript": "~6.0.2",

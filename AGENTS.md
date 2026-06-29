@@ -2,18 +2,18 @@
 
 ## Project Overview
 
-**tinylink** — zero-dependency, type-safe RPC library for Web Workers and Node.js `worker_threads`. Call Worker methods like regular function calls via `expose()`/`wrap()` proxy pattern.
+**justlink** — Type-safe RPC for Workers, threads, and beyond — zero deps, local-feel calls.
 
 ## Quick Commands
 
-| Task                | Command                                                  |
-| ------------------- | -------------------------------------------------------- |
-| Type-check          | `tsc --noEmit`                                           |
+| Task                | Command                                                     |
+| ------------------- | ----------------------------------------------------------- |
+| Type-check          | `tsc --noEmit`                                              |
 | Build               | `npm run build` (vite build + tsc declarations + fix-decls) |
-| Test (all)          | `npm test` (runs node+memory, then browser sequentially) |
-| Test (browser only) | `npm run test:browser`                                   |
-| Lint + fix          | `npm run lint`                                           |
-| Format              | `npm run format`                                         |
+| Test (all)          | `npm test` (runs node+memory, then browser sequentially)    |
+| Test (browser only) | `npm run test:browser`                                      |
+| Lint + fix          | `npm run lint`                                              |
+| Format              | `npm run format`                                            |
 
 ## Agent Workflow Constraints
 
@@ -29,12 +29,12 @@ declaring work complete:
 
 No root `"."` import — all imports must use explicit subpaths:
 
-| Import path         | Module  | What it provides                |
-| ------------------- | ------- | ------------------------------- |
-| `tinylink/core`     | core.ts | `createExpose`, `createWrap`, `Adapter`, `RemoteApi`, `RemoteObject` |
-| `tinylink/browser`  | browser.ts | `expose`, `wrap`, `RemoteApi` |
-| `tinylink/node`     | node.ts | `expose`, `wrap`, `RemoteApi`   |
-| `tinylink/memory`   | memory.ts | `expose`, `wrap`, `createMemoryPair`, `RemoteApi` |
+| Import path        | Module     | What it provides                                                     |
+| ------------------ | ---------- | -------------------------------------------------------------------- |
+| `justlink/core`    | core.ts    | `createExpose`, `createWrap`, `Adapter`, `RemoteApi`, `RemoteObject` |
+| `justlink/browser` | browser.ts | `expose`, `wrap`, `RemoteApi`                                        |
+| `justlink/node`    | node.ts    | `expose`, `wrap`, `RemoteApi`                                        |
+| `justlink/memory`  | memory.ts  | `expose`, `wrap`, `createMemoryPair`, `RemoteApi`                    |
 
 Build output lives in `dist/` — Vite library mode (`preserveModules`) + tsc
 declarations + `scripts/fix-decls.cjs` (rewrites `.ts` → `.js` in `.d.ts`).
@@ -100,7 +100,7 @@ agents should load these when relevant:
   plain object in a Worker and wrap it as `RemoteApi` on the main thread.
 - **[universal-worker](skills/universal-worker/SKILL.md)** — run a plain
   object inside a Web Worker with auto-detection; falls back to main-thread
-  execution via `tinylink/memory` when Worker is unavailable.
+  execution via `justlink/memory` when Worker is unavailable.
 
 ## Pitfalls
 

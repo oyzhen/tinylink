@@ -1,8 +1,8 @@
-# tinylink
+# justlink
 
 [English Documentation](./README.md)
 
-> 零依赖、类型安全的 Web Worker 与 Node.js worker_threads RPC 库。
+> 类型安全的 Worker 与线程 RPC 库——零依赖，本地调用般的体验。
 
 灵感来源于 [`comlink`](https://github.com/GoogleChromeLabs/comlink) 和 [`minlink`](https://github.com/mizchi/minlink)。
 
@@ -10,7 +10,7 @@
 
 Worker 能帮你把耗时的计算放到后台线程，但和 Worker 通信是一件很痛苦的事——你需要手动 `postMessage` / `onmessage`，手动序列化数据，手动追踪状态，代码很快就会变成一团面条。
 
-**tinylink 让你像调用本地函数一样调用 Worker 里的方法。** 你只需要定义一个对象，tinylink 会自动帮你处理所有通信细节。
+**justlink 让你像调用本地函数一样调用 Worker 里的方法。** 你只需要定义一个对象，justlink 会自动帮你处理所有通信细节。
 
 ```ts
 // 定义（在 worker 中）
@@ -28,9 +28,9 @@ const result = await api.fibonacci(40); // 就这么简单！
 
 没有 `postMessage`，没有 `onmessage`，没有手动序列化。只需要 `expose` 和 `wrap`，两个函数搞定。
 
-## 为什么选 tinylink？
+## 为什么选 justlink？
 
-|                  | tinylink                      | 原生 postMessage    | Comlink |
+|                  | justlink                      | 原生 postMessage    | Comlink |
 | ---------------- | ----------------------------- | ------------------- | ------- |
 | **代码量**       | 极少（2 个函数）              | 需要大量样板代码    | 较少    |
 | **TypeScript**   | ✅ 完整类型推导 + 自动补全    | ❌ 需要手动定义类型 | ✅      |
@@ -44,30 +44,30 @@ const result = await api.fibonacci(40); // 就这么简单！
 ## 安装
 
 ```bash
-npm install tinylink
+npm install justlink
 ```
 
 ### 导入方式
 
-tinylink 提供三个入口——根据你的运行环境选择：
+justlink 提供三个入口——根据你的运行环境选择：
 
 | 导入路径           | 适用场景                         |
 | ------------------ | -------------------------------- |
-| `tinylink/browser` | Web Worker（`self` / `Worker`）  |
-| `tinylink/node`    | `worker_threads`（`parentPort`） |
-| `tinylink/memory`  | 进程内（无需真实 Worker）        |
+| `justlink/browser` | Web Worker（`self` / `Worker`）  |
+| `justlink/node`    | `worker_threads`（`parentPort`） |
+| `justlink/memory`  | 进程内（无需真实 Worker）        |
 
 ```ts
-import { expose, wrap } from 'tinylink/browser';
-import { expose, wrap } from 'tinylink/node';
-import { expose, wrap, createMemoryPair } from 'tinylink/memory';
-import type { RemoteApi } from 'tinylink/browser';
+import { expose, wrap } from 'justlink/browser';
+import { expose, wrap } from 'justlink/node';
+import { expose, wrap, createMemoryPair } from 'justlink/memory';
+import type { RemoteApi } from 'justlink/browser';
 ```
 
-core 模块（`tinylink/core`）提供底层 API，用于构建自定义 Adapter：
+core 模块（`justlink/core`）提供底层 API，用于构建自定义 Adapter：
 
 ```ts
-import { createExpose, createWrap, type Adapter, type RemoteApi } from 'tinylink/core';
+import { createExpose, createWrap, type Adapter, type RemoteApi } from 'justlink/core';
 ```
 
 ## 快速开始（5 分钟）
@@ -116,7 +116,7 @@ export type Impl = typeof impl;
 
 ```ts
 // worker.ts
-import { expose } from 'tinylink/browser';
+import { expose } from 'justlink/browser';
 import { impl } from './worker-impl';
 
 expose(self, impl); // 一行搞定！
@@ -127,7 +127,7 @@ expose(self, impl); // 一行搞定！
 ```ts
 // worker.ts
 import { parentPort } from 'node:worker_threads';
-import { expose } from 'tinylink/node';
+import { expose } from 'justlink/node';
 import { impl } from './worker-impl';
 
 expose(parentPort!, impl); // 一行搞定！
@@ -139,7 +139,7 @@ expose(parentPort!, impl); // 一行搞定！
 
 ```ts
 // main.ts
-import { wrap } from 'tinylink/browser';
+import { wrap } from 'justlink/browser';
 import type { Impl } from './worker-impl';
 import MyWorker from './worker?worker'; // Vite 的 Worker 导入语法
 
@@ -157,7 +157,7 @@ console.log(await api.nested.add(1, 2)); // 3
 ```ts
 // main.ts
 import { Worker } from 'node:worker_threads';
-import { wrap } from 'tinylink/node';
+import { wrap } from 'justlink/node';
 import type { Impl } from './worker-impl';
 
 const worker = new Worker('./worker.js');
@@ -265,15 +265,15 @@ await api.$eval(...);   // → reject
 
 ### `createMemoryPair()`
 
-> `import { createMemoryPair } from 'tinylink/memory'`
+> `import { createMemoryPair } from 'justlink/memory'`
 
 创建一对 `host` / `worker` 上下文，通过进程内直接调用通信，无需真实的 Worker。
 
-典型场景：你封装了一套基于 tinylink 的 API，希望它在 Worker 内外都能使用：
+典型场景：你封装了一套基于 justlink 的 API，希望它在 Worker 内外都能使用：
 
 ```ts
-import { createMemoryPair, expose, wrap } from 'tinylink/memory';
-import { expose as browserExpose, wrap as browserWrap } from 'tinylink/browser';
+import { createMemoryPair, expose, wrap } from 'justlink/memory';
+import { expose as browserExpose, wrap as browserWrap } from 'justlink/browser';
 
 // 无论在哪个环境，api 的用法完全一样
 let api: ImplApi;
@@ -328,7 +328,7 @@ const sum = await api.$eval(
 
 ### Transferable 对象
 
-tinylink 会自动检测并转移以下类型——无需手动管理 `transferList`：
+justlink 会自动检测并转移以下类型——无需手动管理 `transferList`：
 
 - `ArrayBuffer`
 - 类型数组（`Uint8Array`、`Float32Array` 等）
@@ -354,7 +354,7 @@ try {
 
 ### 嵌套对象与返回值
 
-Worker 方法返回对象时，tinylink 会自动代理，你可以继续调用返回对象上的方法：
+Worker 方法返回对象时，justlink 会自动代理，你可以继续调用返回对象上的方法：
 
 ```ts
 const counter = await api.createCounter(0);
@@ -369,7 +369,7 @@ await obj.child.deepMethod();
 
 ### 普通对象 vs 代理对象
 
-tinylink 根据返回值**是否包含函数**来决定传输方式：
+justlink 根据返回值**是否包含函数**来决定传输方式：
 
 **包含函数的对象** → 返回**远程代理**，每次访问触发 `postMessage` 通信：
 
@@ -420,7 +420,7 @@ await counter.inc(); // postMessage 往返
 核心的 `createExpose` / `createWrap` 函数接受泛型的 `Adapter` 元组，可以对接任意传输层：
 
 ```ts
-import { createExpose, createWrap, type Adapter } from 'tinylink/core';
+import { createExpose, createWrap, type Adapter } from 'justlink/core';
 
 const myAdapter: Adapter<MyContext> = [
     // emit(ctx, data, transferList?) — 向对方发送数据
@@ -442,11 +442,34 @@ export const wrap = createWrap(myAdapter);
 ## 导入路径一览
 
 ```ts
-import { expose, wrap } from 'tinylink/browser'; // 浏览器 Web Worker
-import { expose, wrap } from 'tinylink/node'; // Node.js worker_threads
-import { createMemoryPair, expose, wrap } from 'tinylink/memory'; // 进程内通信
-import { createExpose, createWrap } from 'tinylink/core'; // 自定义传输层
+import { expose, wrap } from 'justlink/browser'; // 浏览器 Web Worker
+import { expose, wrap } from 'justlink/node'; // Node.js worker_threads
+import { createMemoryPair, expose, wrap } from 'justlink/memory'; // 进程内通信
+import { createExpose, createWrap } from 'justlink/core'; // 自定义传输层
 ```
+
+## Agent Skills
+
+justlink 附带了面向 AI 编程助手的 [skills](https://skills.sh)——可复用的知识，帮助 agent 生成正确的 justlink 代码。
+
+```bash
+npx skills add oyzhen/justlink
+```
+
+| Skill                | 描述                                                                     |
+| -------------------- | ------------------------------------------------------------------------ |
+| `wrap-to-remote-api` | 在 Worker 中暴露一个普通对象，并包装为 `RemoteApi` 代理                  |
+| `universal-worker`   | 自动检测环境运行 Worker；不可用时通过 `justlink/memory` 降级为主进程执行 |
+
+## 限制与注意事项
+
+### `$eval` 闭包不生效
+
+`$eval` 回调在 Worker 内部被 `.toString()` 序列化后执行 —— 闭包中的外部变量无法传递。请使用 `deps` 数组传参。
+
+### `__ref` 对象
+
+包含函数的对象无法被结构化克隆，将被存储为远程引用（ref）。如果你的纯数据对象恰巧含有 `__ref` 属性，justlink 会错误地将其视为远程引用描述符。如有冲突请换用其他属性名前缀。
 
 ## 环境要求
 

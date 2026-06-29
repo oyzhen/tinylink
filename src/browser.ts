@@ -1,6 +1,12 @@
 import { createExpose, createWrap, type Adapter } from './core.ts';
 
-const adapter: Adapter<any> = [
+interface WorkerLikeContext {
+    postMessage(data: unknown, transferList?: unknown[]): void;
+    addEventListener(type: 'message', handler: (ev: MessageEvent) => void): void;
+    terminate(): void;
+}
+
+const adapter: Adapter<WorkerLikeContext> = [
     // emit: postMessage sends data directly; the 'message' event receives it as ev.data
     (ctx, data, transferList) => {
         ctx.postMessage(data, transferList ?? []);

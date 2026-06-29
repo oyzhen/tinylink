@@ -29,6 +29,15 @@ export function runImplSuite(createApi: CreateApi) {
             }
         });
 
+        it('auto-resolves Promise property (no postMessage crash)', async () => {
+            const { api, cleanup } = createApi();
+            try {
+                await expect(api.$get('p')).resolves.toBe('world');
+            } finally {
+                await cleanup();
+            }
+        });
+
         it('retrieves getter (target as owner → __this set)', async () => {
             const { api, cleanup } = createApi();
             try {
@@ -370,6 +379,15 @@ export function runImplSuite(createApi: CreateApi) {
             }
         });
 
+        it('auto-resolves Promise property directly', async () => {
+            const { api, cleanup } = createApi();
+            try {
+                await expect(api.p).resolves.toBe('world');
+            } finally {
+                await cleanup();
+            }
+        });
+
         it('calls method directly', async () => {
             const { api, cleanup } = createApi();
             try {
@@ -403,6 +421,19 @@ export function runImplSuite(createApi: CreateApi) {
                 const canvas = new OffscreenCanvas(2, 2);
                 const bitmap = await api.$exec('paintCanvas', canvas);
                 expect(bitmap).toBeInstanceOf(ImageBitmap);
+            } finally {
+                await cleanup();
+            }
+        });
+
+        it('passMessagePort exercises isTransferable MessagePort branch', async () => {
+            if (typeof MessageChannel === 'undefined') {
+                return;
+            }
+            const { api, cleanup } = createApi();
+            try {
+                const channel = new MessageChannel();
+                await expect(api.$exec('passMessagePort', channel.port1)).resolves.toBe(true);
             } finally {
                 await cleanup();
             }

@@ -2,7 +2,7 @@
 name: universal-worker
 description: |
     Run a plain object inside a Web Worker with automatic environment detection.
-    Falls back to in-process (main-thread) execution via tinylink/memory when
+    Falls back to in-process (main-thread) execution via justlink/memory when
     Worker is unavailable (SSR, older browsers, restricted contexts).
     Use when: the user wants "it just works everywhere", zero-config worker usage,
     or an isomorphic API that degrades gracefully.
@@ -25,7 +25,7 @@ must not break when Worker is unavailable (SSR, iframe sandboxing, CSP, etc.).
 
 ## Solution
 
-tinylink ships `tinylink/memory` — an in-process adapter that bypasses
+justlink ships `justlink/memory` — an in-process adapter that bypasses
 Worker entirely. By combining runtime detection with a conditional import,
 you get **one API surface** that works everywhere:
 
@@ -65,7 +65,7 @@ export type Impl = typeof impl;
 
 ```ts
 // src/worker-runner.ts
-import { expose } from 'tinylink/browser';
+import { expose } from 'justlink/browser';
 import { impl } from './worker-impl';
 
 expose(self, impl);
@@ -78,24 +78,24 @@ expose(self, impl);
 
 ```ts
 // src/create-worker.ts
-import type { RemoteApi } from 'tinylink/browser';
+import type { RemoteApi } from 'justlink/browser';
 import type { Impl } from './worker-impl';
 
 /**
  * Returns a RemoteApi<Impl> that works everywhere:
  * - Real Worker when `typeof Worker !== 'undefined'`
- * - In-process via tinylink/memory when Worker is unavailable
+ * - In-process via justlink/memory when Worker is unavailable
  */
 export async function createWorker(): Promise<RemoteApi<Impl>> {
     // --- Browser: Worker available ---
     if (typeof Worker !== 'undefined') {
-        const { wrap } = await import('tinylink/browser');
+        const { wrap } = await import('justlink/browser');
         const worker = new Worker(new URL('./worker-runner.ts', import.meta.url), { type: 'module' });
         return wrap<Impl>(worker);
     }
 
     // --- Fallback: in-process (SSR, restricted env, no Worker support) ---
-    const { createMemoryPair, expose, wrap } = await import('tinylink/memory');
+    const { createMemoryPair, expose, wrap } = await import('justlink/memory');
     const { impl } = await import('./worker-impl');
     const { host, worker } = createMemoryPair();
     expose(worker, impl);
@@ -126,19 +126,19 @@ await api.$terminate();
 
 ```ts
 // src/create-worker.ts — inline variant (no separate worker file)
-import type { RemoteApi } from 'tinylink/browser';
+import type { RemoteApi } from 'justlink/browser';
 import type { Impl } from './worker-impl';
 
 export async function createWorker(): Promise<RemoteApi<Impl>> {
     if (typeof Worker !== 'undefined') {
         // Vite inlines the worker as a Blob URL
-        const { wrap } = await import('tinylink/browser');
+        const { wrap } = await import('justlink/browser');
         const WorkerFactory = await import('./worker-runner?worker&inline');
         const worker = new WorkerFactory.default();
         return wrap<Impl>(worker);
     }
 
-    const { createMemoryPair, expose, wrap } = await import('tinylink/memory');
+    const { createMemoryPair, expose, wrap } = await import('justlink/memory');
     const { impl } = await import('./worker-impl');
     const { host, worker } = createMemoryPair();
     expose(worker, impl);
@@ -150,7 +150,7 @@ export async function createWorker(): Promise<RemoteApi<Impl>> {
 
 ```ts
 // src/create-worker.ts — Node.js variant
-import type { RemoteApi } from 'tinylink/node';
+import type { RemoteApi } from 'justlink/node';
 import type { Impl } from './worker-impl';
 import { Worker } from 'node:worker_threads';
 import { fileURLToPath } from 'node:url';
@@ -159,7 +159,7 @@ export async function createWorker(): Promise<RemoteApi<Impl>> {
     const hasWorkerThreads = await import('node:worker_threads').then(m => typeof m.Worker === 'function').catch(() => false);
 
     if (hasWorkerThreads) {
-        const { wrap } = await import('tinylink/node');
+        const { wrap } = await import('justlink/node');
         const { Worker: NodeWorker } = await import('node:worker_threads');
         const workerPath = fileURLToPath(new URL('./worker-runner.node.js', import.meta.url));
         const worker = new NodeWorker(workerPath);
@@ -167,7 +167,7 @@ export async function createWorker(): Promise<RemoteApi<Impl>> {
     }
 
     // Node.js without worker_threads — impossible in practice, but safe fallback
-    const { createMemoryPair, expose, wrap } = await import('tinylink/memory');
+    const { createMemoryPair, expose, wrap } = await import('justlink/memory');
     const { impl } = await import('./worker-impl');
     const { host, worker } = createMemoryPair();
     expose(worker, impl);
@@ -195,7 +195,7 @@ export async function getWorker(): Promise<RemoteApi<Impl>> {
 ## Type safety
 
 ```ts
-import type { RemoteApi } from 'tinylink/browser'; // identical to tinylink/node
+import type { RemoteApi } from 'justlink/browser'; // identical to justlink/node
 import type { Impl } from './worker-impl';
 
 // The return type is always the same, regardless of environment
@@ -209,7 +209,7 @@ await api.$terminate();
 
 ## Key points
 
-- **Dynamic imports** (`await import('tinylink/browser')`) ensure the Worker
+- **Dynamic imports** (`await import('justlink/browser')`) ensure the Worker
   code is tree-shaken when the fallback path is taken.
 - `createMemoryPair` is synchronous internally — the `await` on `import()`
   is only for the module resolution, not for any I/O.

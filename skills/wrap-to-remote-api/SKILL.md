@@ -1,7 +1,7 @@
 ---
 name: wrap-to-remote-api
 description: |
-    Generate tinylink code that exposes a plain object in a Worker and wraps it
+    Generate justlink code that exposes a plain object in a Worker and wraps it
     as a RemoteApi proxy on the main thread. Use when the user wants to create
     a new Worker integration, add methods to an existing Worker, or convert a
     plain object into a remote-callable API.
@@ -18,12 +18,12 @@ triggers:
 
 ## Overview
 
-tinylink turns a plain JS object into a type-safe remote proxy across threads.
+justlink turns a plain JS object into a type-safe remote proxy across threads.
 Two sides:
 
 | Side        | Function                              | Import from                                            | Runs inside |
 | ----------- | ------------------------------------- | ------------------------------------------------------ | ----------- |
-| Worker      | `expose(ctx, impl)`                   | `tinylink/browser`, `tinylink/node`, `tinylink/memory` | Worker      |
+| Worker      | `expose(ctx, impl)`                   | `justlink/browser`, `justlink/node`, `justlink/memory` | Worker      |
 | Main thread | `wrap<Impl>(ctx)` → `RemoteApi<Impl>` | same                                                   | main thread |
 
 ## Step-by-step
@@ -59,7 +59,7 @@ Pick the correct adapter:
 
 ```ts
 // worker.ts
-import { expose } from 'tinylink/browser';
+import { expose } from 'justlink/browser';
 import { impl } from './worker-impl';
 expose(self, impl);
 ```
@@ -69,7 +69,7 @@ expose(self, impl);
 ```ts
 // worker.ts
 import { parentPort } from 'node:worker_threads';
-import { expose } from 'tinylink/node';
+import { expose } from 'justlink/node';
 import { impl } from './worker-impl';
 expose(parentPort!, impl);
 ```
@@ -77,7 +77,7 @@ expose(parentPort!, impl);
 **In-memory (testing, no real Worker)** — use `createMemoryPair`:
 
 ```ts
-import { createMemoryPair, expose, wrap } from 'tinylink/memory';
+import { createMemoryPair, expose, wrap } from 'justlink/memory';
 import { impl } from './worker-impl';
 
 const { host, worker } = createMemoryPair();
@@ -89,7 +89,7 @@ const api = wrap(host); // no generic needed — inferred from impl
 
 ```ts
 // main.ts
-import { wrap } from 'tinylink/browser'; // or 'tinylink/node'
+import { wrap } from 'justlink/browser'; // or 'justlink/node'
 import type { Impl } from './worker-impl';
 import MyWorker from './worker?worker'; // Vite worker import
 
@@ -104,7 +104,7 @@ const product = await api.math.multiply(3, 4);
 ## Type cheat sheet
 
 ```ts
-import type { RemoteApi } from 'tinylink/browser'; // or node / memory
+import type { RemoteApi } from 'justlink/browser'; // or node / memory
 
 // The return type of wrap<Impl>(ctx)
 type MyApi = RemoteApi<Impl>;

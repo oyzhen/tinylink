@@ -168,12 +168,7 @@ export const createExpose =
         const resolveExecPayload = (payload: unknown): { methodName: string; args: unknown[] } => {
             const payloadArray = Array.isArray(payload) ? payload : [payload];
             const [rawMethod, ...args] = payloadArray as [unknown, ...unknown[]];
-            const methodName =
-                Array.isArray(rawMethod) && typeof rawMethod[0] === 'string'
-                    ? rawMethod[0]
-                    : typeof rawMethod === 'string'
-                      ? rawMethod
-                      : String(rawMethod);
+            const methodName = typeof rawMethod === 'string' ? rawMethod : String(rawMethod);
             return { methodName, args };
         };
 
@@ -224,7 +219,10 @@ export const createExpose =
                 const key = payload as string;
                 try {
                     const value = (target as Record<string, unknown>)[key];
-                    sendResponse(id, false, value, undefined, target);
+                    Promise.resolve(value).then(
+                        r => sendResponse(id, false, r, undefined, target),
+                        e => sendResponse(id, true, e),
+                    );
                 } catch (e) {
                     sendResponse(id, true, e);
                 }
@@ -560,6 +558,9 @@ function looksLikeRemoteObject(value: unknown): boolean {
 
 function isClonable(value: unknown): boolean {
     if (typeof value === 'function' || typeof value === 'symbol') {
+        return false;
+    }
+    if (value instanceof Promise) {
         return false;
     }
     if (

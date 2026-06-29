@@ -38,6 +38,9 @@ const impl = {
     // -- scalar property --
     x: 'hello',
 
+    // -- a promise
+    p: Promise.resolve('world'),
+
     // -- getter (exercises $get → sendResponse with target as owner) --
     get counter() {
         return counter;
@@ -204,6 +207,11 @@ const impl = {
     // -- Set containing transferable (collectTransferables Set recursion) --
     getSetWithBuffer() {
         return new Set([new Uint8Array([3, 4])]);
+    },
+
+    // -- MessagePort transferable (exercises isTransferable hasMessagePort branch) --
+    passMessagePort(port: MessagePort) {
+        return port instanceof MessagePort;
     },
 
     // -- Async success (Promise resolution path) --
