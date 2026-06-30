@@ -1,6 +1,6 @@
 {
     "name": "justlink",
-    "version": "1.1.0",
+    "version": "1.2.0",
     "description": "Type-safe RPC for Workers, threads, and beyond — zero deps, local-feel calls.",
     "license": "MIT",
     "author": "oyzhen",
